@@ -4,12 +4,14 @@ print(pyautogui.size())
 WIDTH,HEIGHT=pyautogui.size()
 TITLE="endless_shooter_game"
 
+zombies=[]
+coins=[]
 enemies=[]
 powers=[]
 score=0
 lives=3
 gamestate="start"
-
+collected_coins=0
 character=Actor("new-character1.png")
 character.pos=(100,HEIGHT/2)
 
@@ -20,6 +22,12 @@ def create_enemies():
         enemy=Actor("enemy.png")
         enemy.pos=(WIDTH,random.randint(0,HEIGHT-50))
         enemies.append(enemy)
+
+def create_coins():
+    if gamestate == "play":
+        coin=Actor("goldcoin.png")
+        coin.pos=(WIDTH,random.randint(0,HEIGHT-50))
+        coins.append(coin)
 
 
 def draw():
@@ -32,15 +40,18 @@ def draw():
             i.draw()
         for i in powers:
             i.draw()
+        for i in coins:
+            i.draw()
         screen.draw.text(f"SCORE={score}",(50,50))
-        screen.draw.text(f"LIVES={lives}",(50,100))
+        screen.draw.text(f"LIVES={lives}",center=(WIDTH//2,50))
+        screen.draw.text(f"COINS={collected_coins}",(WIDTH-200,50))
     else:
         screen.draw.text("Gameover",center = (WIDTH//2,HEIGHT//2), fontsize=40 )
 
     
 
 def update():
-    global score, lives, gamestate
+    global score, lives, gamestate, collected_coins
     if keyboard.space and gamestate !="play":
         gamestate="play"
         score=0
@@ -56,10 +67,11 @@ def update():
         if character.y > HEIGHT:
             character.y=0
             
-        
+        for i in enemies:
         
         for i in powers:
             i.x+=4
+            i.angle+=10
             if i.x > WIDTH:
                 powers.remove(i)
             for e in enemies:
@@ -79,9 +91,18 @@ def update():
                     lives-=1
                 if lives==0:
                     gamestate="end"
+        
+        for i in coins:
+            i.x-=4
+            if i.x < 0:
+                coins.remove(i)
+            if character.colliderect(i):
+                coins.remove(i)
+                collected_coins+=1
+
     
 clock.schedule_interval(create_enemies,2)
-
+clock.schedule_interval(create_coins,2)
 def on_key_down(key):
     if gamestate == "play" and key == keys.SPACE:
             projectile=Actor("projectile2.png")
